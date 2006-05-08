@@ -5,7 +5,9 @@ use strict;
 
 use constant BASE => 101;
 
-our $VERSION = "0.33";
+use constant MOD => int(2**31 / BASE - 1);
+
+our $VERSION = "0.34";
 
 =head1 NAME
 
@@ -104,13 +106,14 @@ sub new {
   die __PACKAGE__." requires either a scalar, file handle, or coderef"
     unless $source;
     
-  if (BASE ** $k <= 0) {
-    require bignum;
+  my $rm_k = BASE;
+  for (1..$k-1) {
+    $rm_k = ($rm_k * BASE) % MOD;
   }
   
   bless { 
     k => $k,
-    rm_k => BASE ** $k, #used to remove the first value in the value buffer.
+    rm_k => $rm_k, #used to remove the first value in the value buffer.
     vals => [],
     stream => $stream,
   }, ref $class || $class;
@@ -140,13 +143,12 @@ sub next {
     return unless @$nextval;
     
     push @values, $nextval;
-    # If someone wants to submit a modulus version of this
-    # I would be most grateful.
-    $hash -= $prev->[0] * $self->{rm_k};
+    $hash -= ($prev->[0] * $self->{rm_k}) % MOD;
     $hash += $nextval->[0];
     $hash *= BASE;
+    $hash %= MOD;
   } while (@values < $self->{k});
-  #warn join( '', map { chr($_ ) } @values). ' '.$hash;
+
   $self->{hash} = $hash;
   $self->{vals} = \@values;
   
@@ -183,11 +185,7 @@ sub values {
 
 =head1 BUGS
 
-No explicit guards against overflow have been taken, nor any attempts to
-use clever bitwise operators.  I recommend either using small values of
-C<k>, or including a 'use bignum' line before before iterating with larger
-C<k>s.  In a future version of this module, I will shift to using modulo
-arithmetic, which will not have the same sort of overflow problems.
+None known.
 
 =head1 SEE ALSO
 

@@ -17,9 +17,12 @@ my $kgram = Algorithm::RabinKarp->new($k,$source);
 ok my @values = $kgram->values, "We get a kgram hash array";
 is @values, $kgrams, "We get length - k + 1 kgram hash values";
 
-#use Data::Dumper; warn Dumper(\%check);
 my %kgram_seen;
 my %source_seen;
+
+#use Data::Dumper; warn Dumper( [
+#map { [ $_->[0], substr($source, $_->[1], $_->[2]) ] }
+#map { [ $_->[0], $_->[1], $_->[2] - $_->[1] + 1]} @values ]);
 
 for my $i (0..(length($source)-$k)) {
   my $fragment = substr($source, $i, $k);
