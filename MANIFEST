@@ -1,0 +1,6 @@
+Build.PL
+lib/Algorithm/RabinKarp.pm
+Makefile.PL
+MANIFEST			This list of files
+META.yml
+t/hash.t
