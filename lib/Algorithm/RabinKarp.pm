@@ -3,15 +3,17 @@ package Algorithm::RabinKarp;
 use warnings;
 use strict;
 
-use constant BASE => 101;
+use UNIVERSAL;
+
+use constant BASE => 256;
 
 use constant MOD => int(2**31 / BASE - 1);
 
-our $VERSION = "0.34";
+our $VERSION = "0.35";
 
 =head1 NAME
 
-Algorithm::RabinKarp - rabin-karp streaming hash
+Algorithm::RabinKarp - Rabin-Karp streaming hash
 
 =head1 SYNOPSIS
 
@@ -28,7 +30,7 @@ or
     return $num, $position;
   });
   
-  my ($first, $start_position, $end_position) = $kgram->next;
+  my ($hash, $start_position, $end_position) = $kgram->next;
   
   my @values = $kgram->values;
   
@@ -67,6 +69,20 @@ your data to remove all unnecessary information. For example, in a large
 english document, you should probably remove all white space, as well
 as removing all capitalization.
 
+=head1 INTENT
+
+By preprocessing your document with the Rabin Karp hashing algorithm,
+it makes it possible to create a "fingerprint" of your document (or documents), 
+and then perform multiple searches for fragments contained within your document
+database.
+
+Schleimer, Wilkerson, and Aiken suggest preproccessing to remove
+unnecessary information (like whitespace), as well as known redundent information
+(like, say, copyright notices or other boilerplate that is 'acceptable'.)
+
+They also suggest a post processing pass to reduce data volume, using a technique
+called winnowing (see the link at the end of this documentation.)
+
 =head1 METHODS
 
 =over
@@ -83,29 +99,32 @@ filtering characters out because they're redundant.)
 sub new {
   my $class = shift;
   my $k = shift;
-  my $source;
-  if (!ref $_[0]) {
-    open $source, '<', \$_[0] 
-      or die "Couldn't create a file handle on scalar source: $!";
-  } else {
-    $source = $_[0];
-  }
-  my $stream;
-  if ($source->isa("IO::Handle") || (ref $source) =~  /^GLOB/) {
+  my $stream; 
+  if (defined $_[0] && !ref $_[0]) {
+    my $pos = 0;
+    my $string = $_[0];
+    $stream = sub {
+      return if ($pos >= length($string));
+      my @ret = (ord(substr($string, $pos, 1)), $pos);
+      $pos++;
+      return @ret;
+    };
+  } elsif (ref $_[0] eq 'CODE') {
+    $stream = $_[0];
+  } elsif (UNIVERSAL::isa($_[0], "IO::Handle") 
+           || UNIVERSAL::isa($_[0],"GLOB")) {
     require IO::Handle;
     # The simplest way of getting character position right now.
-    my $counter = 0;
+    my $source = $_[0];
     $stream = sub {
       return if $source->eof;
-      (ord($source->getc), $counter++);
+      (ord($source->getc), tell($source));
     };
-  } elsif (ref $source eq 'CODE') {
-    $stream = $source;
+  } else {
+    die __PACKAGE__." requires its source stream be one of the ".
+        "following types: scalar, file handle, coderef, or IO::Handle";
   }
   
-  die __PACKAGE__." requires either a scalar, file handle, or coderef"
-    unless $source;
-    
   my $rm_k = BASE;
   for (1..$k-1) {
     $rm_k = ($rm_k * BASE) % MOD;
@@ -121,12 +140,11 @@ sub new {
 
 =item next()
 
-Returns an array of three values for each call. The first element is
-the k-gram hash value.  The second and third elements are the start and
-end positions, inclusive, as provided by the generator stream.
+Returns the triple (kgram hash value, start position, end position) for every 
+call that can have a hash generated, or () when we have reached the end
+of the stream.
 
-C<next()> requires $k iterations to warm up on first call (don't worry, you
-don't need to remember to do that, it's handled internally.)  Each successive
+C<next()> pulls the first $k from the stream on the first call. Each successive
 call to C<next()> has a complexity of O(1).
 
 =cut
@@ -138,7 +156,7 @@ sub next {
   my @values = @{$self->{vals}}; #assume that @values always contains k values
   my $prev = shift @values || [0, undef];
   my $hash = $self->{hash};
-  do {
+  while (@values < $self->{k}) {
     my $nextval = [$self->{stream}->()];
     return unless @$nextval;
     
@@ -147,7 +165,7 @@ sub next {
     $hash += $nextval->[0];
     $hash *= BASE;
     $hash %= MOD;
-  } while (@values < $self->{k});
+  }
 
   $self->{hash} = $hash;
   $self->{vals} = \@values;
@@ -164,8 +182,8 @@ format as yielded by L<next|/METHODS>.)
 After calling C<values()> the stream will be completely exhausted, causing 
 subsequent calls to C<values> and C<next()> to return C<undef>.
 
-NOTE: You should use C<next> if the stream you are generating hash codes for
-is infinite. Failure to do so will yield unexpected results.
+NOTE: You should use C<next> if your source stream is infinite, as values
+will greedily attempt to consume all values.
 
 =cut
 
@@ -185,7 +203,9 @@ sub values {
 
 =head1 BUGS
 
-None known.
+The current multipliers and modulus lead to very poor hash
+distributions.  I'll investigate methods of improving this
+in future versions.
 
 =head1 SEE ALSO
 
