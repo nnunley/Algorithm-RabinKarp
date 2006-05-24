@@ -3,8 +3,14 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4;
-use Test::Exception;
+use Test::More;
+BEGIN {
+	eval "use Test::Exception; 1"
+		or plan skip_all => "Test::Exception required to test construction.";
+	plan tests => 4;
+}
+
+
 use Algorithm::RabinKarp;
 
 my $hash_generator;

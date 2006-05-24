@@ -5,7 +5,8 @@ WriteMakefile
           'NAME' => 'Algorithm::RabinKarp',
           'VERSION_FROM' => 'lib/Algorithm/RabinKarp.pm',
           'PREREQ_PM' => {
-                           'bignum' => undef
+                           'Test::Exception' => '0',
+                           'Test::More' => '0'
                          },
           'INSTALLDIRS' => 'site',
           'PL_FILES' => {}

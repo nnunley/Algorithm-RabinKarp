@@ -11,8 +11,14 @@ my $build = Module::Build->new(
         license => 'perl',
         create_makefile_pl => 'traditional',
 	requires => {
-		perl => '>=5.008',
+		perl => '>=5.006',
+	},
+	recommends => {
 		bignum => undef
+		Test::Exception => 0
+	},
+	build_requires => {
+		'Test::More' => 0,
 	}
 );
 
