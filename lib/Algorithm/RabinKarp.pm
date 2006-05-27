@@ -9,7 +9,7 @@ use constant BASE => 256;
 
 use constant MOD => int(2**31 / BASE - 1);
 
-our $VERSION = "0.36";
+our $VERSION = "0.37";
 
 =head1 NAME
 

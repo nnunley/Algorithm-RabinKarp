@@ -14,8 +14,8 @@ my $build = Module::Build->new(
 		perl => '>=5.006',
 	},
 	recommends => {
-		bignum => undef
-		Test::Exception => 0
+		bignum => undef,
+		'Test::Exception' => 0
 	},
 	build_requires => {
 		'Test::More' => 0,
