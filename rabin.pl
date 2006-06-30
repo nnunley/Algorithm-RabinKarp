@@ -20,10 +20,10 @@ my %occurances;
 my $rule = File::Find::Rule->new;
 my @files = $rule->or($rule->new
                              ->directory
-                             ->name('blib6?')
+                             ->name(qr/(blib6?|inc)/)
                              ->prune
                              ->discard, 
-                        $rule->new->file->name('*.p[lm]'))->in(@ARGV);
+                        $rule->new->file->name(shift @ARGV))->in(@ARGV);
                         
 for my $file ( @files ) { ### Hashing ===[%]     done
    open my $fh, '<', $file;
@@ -44,8 +44,8 @@ use constant HASH_START => 2;
 use constant HASH_END   => 3; 
 use constant KGRAMS     => 4;
 
-@rec  = sort { $a->[FILE]  cmp $b->[FILE] 
-               or $a->[HASH_START] <=> $b->[HASH_START] } 
+@rec  = sort {        $a->[FILE]  cmp $b->[FILE] 
+              or $a->[HASH_START] <=> $b->[HASH_START] } 
         grep{ $occurances{ $_->[HASH] } > 1 }  # at least one appearance.
         @rec;
 
@@ -66,14 +66,34 @@ for my $curr (@rec) { ### Joining ranges ===[%]      done
   }
 }
 
+my %chunks;
+my $last = '';
+sub dumpit {
+    for my $text (keys %chunks) {
+      my @files = keys %{ $chunks{$text} };
+      next unless @files > 1;
+      print "====\n";
+      for my $file ( @files) {
+        for my $pos (@{ $chunks{$text}{$file} }) {
+          print "  $file lines ".$pos->[0][-1].':'.$pos->[1][-1]."\n";
+        }
+      }
+      print ">>>>\n$text\n----\n";
+    }
+    %chunks = ();
+}
+
 for my $rec (sort {  
                      $occurances{ $b->[HASH] } <=> $occurances{ $a->[HASH] }
                   or $a->[HASH]                <=> $b->[HASH]
                   or span($b)                  <=> span($a)
                  } @newrec) { ### Emitting Report ===[%]       done
-  my ($hash, $f,$s,$e) = @$rec;
-  print join("\t",$occurances{$hash}, $f, $s, $e, "\n==>".emit_fragment($f,$s,$e))." <==\n";
+  my ($hash, $file_name, $start_offset, $end_offset, $s, $e) = @$rec;
+  dumpit() if ($last ne $hash);
+  $last = $hash;
+  push @{ $chunks{emit_fragment($file_name,$start_offset,$end_offset)}{$file_name}}, [$s,$e];
 }
+dumpit();
 
 sub span {
   my $rec = shift;

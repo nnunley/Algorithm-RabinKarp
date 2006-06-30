@@ -29,11 +29,11 @@ sub filter_regexp {
   my $coderef = shift;
   sub {
     my ($c, $pos);
-    CHAR: while (($c, $pos) = $coderef->()) {
+    CHAR: while (($c, @rest) = $coderef->()) {
        last CHAR if chr($c) !~ $regexp;
     } 
     return unless $c;
-    return $c, $pos;
+    return $c, @rest;
   };  
 }
 
@@ -45,11 +45,20 @@ Iterates across values in a file handle.
 
 sub stream_fh { 
   my $fh = shift;
+  my $line = 0;
+  my $col = -1;
+  my $nl = ord("\n");
   sub {
       return if $fh->eof;
       use bytes;
       my $pos = tell($fh);
-      (ord($fh->getc), $pos);
+      my $char = ord($fh->getc);
+      if ($char == $nl)  {
+        $col = 0; $line++;
+      } else {
+        $col ++;
+      }
+      ($char, $pos, $col, $line);
   };
 }
 

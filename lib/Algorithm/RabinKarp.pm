@@ -11,7 +11,7 @@ use constant BASE => 256;
 
 use constant MOD => int(2**31 / BASE - 1);
 
-our $VERSION = "0.38";
+our $VERSION = "0.39";
 
 =head1 NAME
 
@@ -139,9 +139,9 @@ sub make_stream {
 
 =item next()
 
-Returns the triple (kgram hash value, start position, end position) for every 
-call that can have a hash generated, or () when we have reached the end
-of the stream.
+Returns an array containing (kgram hash value, start position , end position, start, end) 
+for every call that can have a hash generated, or () when we have reached the end
+of the stream.  
 
 C<next()> pulls the first $k from the stream on the first call. Each successive
 call to C<next()> has a complexity of O(1).
@@ -168,7 +168,7 @@ sub next {
 
   $self->{hash} = $hash;
   
-  return $hash, $values->[0][1], $values->[-1][1];
+  return $hash, $values->[0][1], $values->[-1][1], @{ $values }[0, -1];
 }
 
 =item values
