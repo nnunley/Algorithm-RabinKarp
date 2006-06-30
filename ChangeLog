@@ -1,0 +1,9 @@
+0.38:
+  Speed up the next method a little by reducing the number of times it copies its internal
+  buffer.  I've also added a script ('rabin.pl') that demonstrates how to use
+  Algorithm::RabinKarp with multiple files.  Patches welcome and desired.
+
+0.37:
+  Well, it looks like I messed up the Build.PL file.  Making an incremental release to attempt
+  to make it possible to build using the Build.PL, and also reduce the minimum requirements to
+  install this module.

@@ -8,6 +8,9 @@ WriteMakefile
                            'Test::More' => '0'
                          },
           'INSTALLDIRS' => 'site',
+          'EXE_FILES' => [
+                           'rabin.pl'
+                         ],
           'PL_FILES' => {}
         )
 ;

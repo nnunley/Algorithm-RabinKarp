@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: Algorithm-RabinKarp
-version: 0.37
+version: 0.38
 author:
   - Norman Nunley <nnunley@gmail.com>
 abstract: An implementation of the Rabin-Karp rolling hash algorithm

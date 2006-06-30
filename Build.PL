@@ -15,11 +15,15 @@ my $build = Module::Build->new(
 	},
 	recommends => {
 		bignum => undef,
-		'Test::Exception' => 0
+		'Test::Exception' => 0,
+		'Smart::Comments' => 0,
 	},
 	build_requires => {
 		'Test::More' => 0,
-	}
+	},
+	script_files => [
+		'rabin.pl'
+	]
 );
 
 $build->create_build_script();

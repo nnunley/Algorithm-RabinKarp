@@ -3,13 +3,15 @@ package Algorithm::RabinKarp;
 use warnings;
 use strict;
 
+use Algorithm::RabinKarp::Util qw(stream_fh stream_string);
+
 use UNIVERSAL;
 
 use constant BASE => 256;
 
 use constant MOD => int(2**31 / BASE - 1);
 
-our $VERSION = "0.37";
+our $VERSION = "0.38";
 
 =head1 NAME
 
@@ -99,32 +101,7 @@ filtering characters out because they're redundant.)
 sub new {
   my $class = shift;
   my $k = shift;
-  my $stream; 
-  if (defined $_[0] && !ref $_[0]) {
-    my $pos = 0;
-    my $string = $_[0];
-    $stream = sub {
-      return if ($pos >= length($string));
-      my @ret = (ord(substr($string, $pos, 1)), $pos);
-      $pos++;
-      return @ret;
-    };
-  } elsif (ref $_[0] eq 'CODE') {
-    $stream = $_[0];
-  } elsif (UNIVERSAL::isa($_[0], "IO::Handle") 
-           || UNIVERSAL::isa($_[0],"GLOB")) {
-    require IO::Handle;
-    # The simplest way of getting character position right now.
-    my $source = $_[0];
-    $stream = sub {
-      return if $source->eof;
-      (ord($source->getc), tell($source));
-    };
-  } else {
-    die __PACKAGE__." requires its source stream be one of the ".
-        "following types: scalar, file handle, coderef, or IO::Handle";
-  }
-  
+  my $stream = $class->make_stream(shift); 
   my $rm_k = BASE;
   for (1..$k-1) {
     $rm_k = ($rm_k * BASE) % MOD;
@@ -137,6 +114,28 @@ sub new {
     stream => $stream,
   }, ref $class || $class;
 }
+
+sub make_stream {
+  my $class = shift;
+  my $source = shift;	
+  
+  return $source if ref $source eq 'CODE';
+  
+  my $stream; 
+  if (defined $source && !ref $source) {
+    $stream = stream_string($source);
+  } elsif (UNIVERSAL::isa($source, "IO::Handle") 
+           || UNIVERSAL::isa($source,"GLOB")) {
+    require IO::Handle;
+    # The simplest way of getting character position right now.
+    $stream = stream_fh($source);
+  } else {
+    die __PACKAGE__." requires its source stream be one of the ".
+        "following types: scalar, file handle, coderef, or IO::Handle";
+  }
+  return $stream;
+}
+  
 
 =item next()
 
@@ -153,14 +152,14 @@ sub next {
 
   # assume, for now, that each value is an integer, or can
   # auto cast to char
-  my @values = @{$self->{vals}}; #assume that @values always contains k values
-  my $prev = shift @values || [0, undef];
+  my $values = $self->{vals} || []; #assume that @values always contains k values
+  my $prev = shift @$values || [0, undef];
   my $hash = $self->{hash};
-  while (@values < $self->{k}) {
+  while (@$values < $self->{k}) {
     my $nextval = [$self->{stream}->()];
     return unless @$nextval;
     
-    push @values, $nextval;
+    push @$values, $nextval;
     $hash -= ($prev->[0] * $self->{rm_k}) % MOD;
     $hash += $nextval->[0];
     $hash *= BASE;
@@ -168,9 +167,8 @@ sub next {
   }
 
   $self->{hash} = $hash;
-  $self->{vals} = \@values;
   
-  return $hash, $values[0]->[1], $values[-1]->[1];
+  return $hash, $values->[0][1], $values->[-1][1];
 }
 
 =item values
