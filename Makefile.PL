@@ -2,15 +2,15 @@
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
-          'NAME' => 'Algorithm::RabinKarp',
-          'VERSION_FROM' => 'lib/Algorithm/RabinKarp.pm',
-          'PREREQ_PM' => {
-                           'Test::More' => '0'
-                         },
+          'PL_FILES' => {},
           'INSTALLDIRS' => 'site',
+          'NAME' => 'Algorithm::RabinKarp',
           'EXE_FILES' => [
                            'rabin.pl'
                          ],
-          'PL_FILES' => {}
+          'VERSION_FROM' => 'lib/Algorithm/RabinKarp.pm',
+          'PREREQ_PM' => {
+                           'Test::More' => 0
+                         }
         )
 ;

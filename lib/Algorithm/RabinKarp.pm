@@ -7,11 +7,9 @@ use Algorithm::RabinKarp::Util qw(stream_fh stream_string);
 
 use UNIVERSAL;
 
-use constant BASE => 256;
+use constant BASE => 2;
 
-use constant MOD => int(2**31 / BASE - 1);
-
-our $VERSION = "0.39";
+our $VERSION = "0.40";
 
 =head1 NAME
 
@@ -103,13 +101,9 @@ sub new {
   my $k = shift;
   my $stream = $class->make_stream(shift); 
   my $rm_k = BASE;
-  for (1..$k-1) {
-    $rm_k = ($rm_k * BASE) % MOD;
-  }
   
   bless { 
-    k => $k,
-    rm_k => $rm_k, #used to remove the first value in the value buffer.
+    k => $k % 32,
     vals => [],
     stream => $stream,
   }, ref $class || $class;
@@ -152,18 +146,17 @@ sub next {
 
   # assume, for now, that each value is an integer, or can
   # auto cast to char
-  my $values = $self->{vals} || []; #assume that @values always contains k values
+  my $values = $self->{vals}; #assume that @values always contains k values
   my $prev = shift @$values || [0, undef];
-  my $hash = $self->{hash};
+  my $hash = $self->{hash} || 0;
   while (@$values < $self->{k}) {
     my $nextval = [$self->{stream}->()];
     return unless @$nextval;
-    
     push @$values, $nextval;
-    $hash -= ($prev->[0] * $self->{rm_k}) % MOD;
+    $hash <<= 1;
+    $hash -= $prev->[0] << $self->{k};
     $hash += $nextval->[0];
-    $hash *= BASE;
-    $hash %= MOD;
+    
   }
 
   $self->{hash} = $hash;
@@ -209,6 +202,9 @@ in future versions.
 
   "Winnowing: Local Algorithms for Document Fingerprinting"
   L<http://theory.stanford.edu/~aiken/publications/papers/sigmod03.pdf>
+
+  Wikipedia: Rabin-Karp string search algorithm
+  L<http://en.wikipedia.org/wiki/Rabin-Karp>
 
 =head1 AUTHOR
 

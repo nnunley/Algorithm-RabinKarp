@@ -1,8 +1,27 @@
---- #YAML:1.0
+---
 name: Algorithm-RabinKarp
-version: 0.39
+version: 0.40
 author:
-  - Norman Nunley <nnunley@gmail.com>
+  - 'Norman Nunley <nnunley@gmail.com>'
 abstract: An implementation of the Rabin-Karp rolling hash algorithm
 license: perl
-generated_by: Module::Build version 0.2612, without YAML.pm
+resources:
+  license: http://dev.perl.org/licenses/
+requires:
+  perl: '>=5.006'
+build_requires:
+  Test::More: 0
+recommends:
+  Smart::Comments: 0
+  Test::Exception: 0
+  bignum: ~
+provides:
+  Algorithm::RabinKarp:
+    file: lib/Algorithm/RabinKarp.pm
+    version: 0.40
+  Algorithm::RabinKarp::Util:
+    file: lib/Algorithm/RabinKarp/Util.pm
+generated_by: Module::Build version 0.2805
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
