@@ -20,6 +20,7 @@ my $build = Module::Build->new(
 	},
 	build_requires => {
 		'Test::More' => 0,
+		'File::Temp' => 0,
 	},
 	script_files => [
 		'rabin.pl'

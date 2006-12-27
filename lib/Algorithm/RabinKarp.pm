@@ -9,7 +9,7 @@ use UNIVERSAL;
 
 use constant BASE => 2;
 
-our $VERSION = "0.40";
+our $VERSION = "0.41";
 
 =head1 NAME
 

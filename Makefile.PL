@@ -10,7 +10,8 @@ WriteMakefile
                          ],
           'VERSION_FROM' => 'lib/Algorithm/RabinKarp.pm',
           'PREREQ_PM' => {
-                           'Test::More' => 0
+                           'Test::More' => 0,
+                           'File::Temp' => 0
                          }
         )
 ;
