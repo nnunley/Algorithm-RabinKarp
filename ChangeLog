@@ -1,3 +1,6 @@
+0.41_1
+  reverse the ordering of the import parameters for File::Temp to make t/util.t
+  work with 5.6.1
 0.41
   Modification of t/util.t to make it more compatible with perl 5.6 -- Some of the
   tests failed because I forgot that the special form for opening a string as
